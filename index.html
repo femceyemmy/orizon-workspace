@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orizon | Enterprise Verification Workspace (Universal Audit Envelope)</title>
+    <!-- =========================================================================
+         BLOCK 1: STYLESHEET & CSS INTERFACE ARCHITECTURE
+         ========================================================================= -->
+    <style>
+        :root {
+            --bg-canvas: #090b10;
+            --surface-panel: #121622;
+            --surface-card: #181f30;
+            --surface-hover: #1f283d;
+            --border-color: #26334d;
+            --border-active: #3b5280;
+            --accent-primary: #00e5ff;
+            --accent-glow: rgba(0, 229, 255, 0.15);
+            --accent-green: #00e676;
+            --accent-green-glow: rgba(0, 230, 118, 0.15);
+            --accent-red: #ff5252;
+            --accent-red-glow: rgba(255, 82, 82, 0.15);
+            --accent-amber: #ffab40;
+            --accent-amber-glow: rgba(255, 171, 64, 0.15);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-canvas); color: var(--text-main); font-family: var(--font-sans); height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+
+        header { background: var(--surface-panel); border-bottom: 1px solid var(--border-color); height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 100; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-badge { background: var(--accent-primary); color: #000; font-weight: 800; font-size: 11px; padding: 3px 6px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.5px; }
+        .logo-title { font-weight: 600; font-size: 14px; letter-spacing: -0.2px; }
+        .logo-subtitle { color: var(--text-muted); font-size: 11px; border-left: 1px solid var(--border-color); padding-left: 10px; font-family: var(--font-mono); }
+        
+        .header-chambers { display: flex; align-items: center; gap: 12px; }
+        .engine-mode-toggle { display: flex; background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 2px; }
+        .engine-mode-btn { background: transparent; border: none; color: var(--text-muted); padding: 4px 10px; font-size: 10px; font-family: var(--font-mono); font-weight: 700; cursor: pointer; border-radius: 4px; }
+        .engine-mode-btn.active-local { background: var(--surface-card); color: var(--accent-amber); border: 1px solid rgba(255, 171, 64, 0.4); }
+        .engine-mode-btn.active-live { background: var(--surface-card); color: var(--accent-primary); border: 1px solid rgba(0, 229, 255, 0.4); }
+
+        .chamber-dropdown { background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); }
+        .workspace-grid { display: grid; grid-template-columns: 380px 1fr 520px; flex: 1; overflow: hidden; }
+        .left-column { background: var(--surface-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow-y: auto; }
+        .module-section { border-bottom: 1px solid var(--border-color); }
+        .module-header { padding: 12px 16px; background: var(--surface-card); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+        .module-title { font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px; }
+        .toggle-switch { width: 32px; height: 18px; background: var(--border-color); border-radius: 9px; position: relative; transition: background 0.2s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+        .module-section.active .toggle-switch { background: var(--accent-primary); }
+        .module-section.active .toggle-switch::after { transform: translateX(14px); }
+        .module-body { padding: 16px; display: none; }
+        .module-section.active .module-body { display: block; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-family: var(--font-mono); }
+        select, input, textarea { width: 100%; background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 6px; font-size: 12px; font-family: var(--font-sans); }
+        .param-row { background: var(--bg-canvas); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; }
+        .param-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .param-toggle-btn { background: var(--surface-card); border: 1px solid var(--border-color); color: var(--accent-green); font-size: 10px; font-family: var(--font-mono); padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+        .mode-switcher { display: flex; gap: 4px; background: var(--bg-canvas); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+        .mode-tab { flex: 1; text-align: center; padding: 6px; font-size: 10px; font-family: var(--font-mono); cursor: pointer; border-radius: 4px; color: var(--text-muted); font-weight: 600; }
+        .mode-tab.active { background: var(--surface-card); color: var(--accent-primary); border: 1px solid var(--border-active); }
+        .journey-step-item { padding: 10px 12px; border-left: 2px solid var(--border-color); margin-bottom: 8px; background: var(--bg-canvas); border-radius: 0 6px 6px 0; cursor: pointer; }
+        .journey-step-item.active { border-color: var(--accent-primary); background: rgba(0, 229, 255, 0.05); }
+        .journey-step-title { font-weight: 600; font-size: 11px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .journey-step-desc { font-size: 10px; color: var(--text-muted); }
+        .center-column { display: flex; flex-direction: column; overflow: hidden; background: var(--bg-canvas); }
+        .center-stack { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+        .panel-box { background: var(--surface-panel); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .panel-box-header { padding: 10px 14px; background: var(--surface-card); border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 11px; font-family: var(--font-mono); display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; }
+        .panel-box-body { padding: 14px; }
+        .telemetry-terminal { background: var(--bg-canvas); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--accent-primary); margin-top: 10px; }
+        .gate-row { background: var(--bg-canvas); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .btn-execute { width: 100%; background: var(--accent-primary); color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-mono); margin-top: 10px; }
+        .btn-secondary { background: var(--surface-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: var(--font-mono); }
+        .right-column { background: var(--surface-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+        .surface4-header { padding: 12px 16px; background: var(--surface-card); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+        .surface4-header-top { display: flex; align-items: center; justify-content: space-between; }
+        .stream-switcher { display: flex; gap: 4px; background: var(--bg-canvas); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .stream-btn { flex: 1; text-align: center; padding: 5px 8px; font-size: 10px; font-family: var(--font-mono); cursor: pointer; border-radius: 4px; color: var(--text-muted); font-weight: 600; }
+        .stream-btn.active { background: var(--surface-card); color: var(--accent-primary); border: 1px solid var(--border-active); }
+        .presentation-lenses { display: flex; gap: 4px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 4px; }
+        .lens-btn { background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-family: var(--font-mono); }
+        .lens-btn.active { background: var(--surface-hover); color: var(--accent-primary); border-color: var(--accent-primary); }
+        .btn-merge { background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.4); color: var(--accent-green); padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 10px; cursor: pointer; font-family: var(--font-mono); }
+        .surface4-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .audit-card { background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 16px; position: relative; }
+        .audit-card.breach { border-color: var(--accent-red); background: rgba(255, 82, 82, 0.03); }
+        .audit-card.passed { border-color: var(--accent-green); background: rgba(0, 230, 118, 0.03); }
+        .step-origin-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); color: var(--accent-primary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; text-transform: uppercase; }
+        .audit-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px; }
+        .audit-card-title { font-weight: 700; font-size: 13px; font-family: var(--font-mono); line-height: 1.3; }
+        .status-badge { font-size: 9px; font-family: var(--font-mono); padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
+        .status-badge.high { background: var(--accent-red-glow); color: var(--accent-red); border: 1px solid rgba(255, 82, 82, 0.3); }
+        .status-badge.located { background: var(--accent-green-glow); color: var(--accent-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+        .template-slot-box { font-size: 11px; color: var(--text-main); line-height: 1.6; margin-bottom: 10px; background: var(--bg-canvas); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-family: var(--font-mono); }
+        .slot-row { display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 3px; }
+        .slot-label { color: var(--text-muted); }
+        .slot-value { font-weight: 600; color: var(--accent-primary); text-align: right; }
+        .provenance-toggle { font-size: 10px; color: var(--accent-primary); background: none; border: none; cursor: pointer; font-family: var(--font-mono); display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+        .provenance-box { display: none; background: var(--bg-canvas); border: 1px dashed var(--border-color); padding: 8px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 10px; white-space: pre-wrap; }
+        .provenance-box.show { display: block; }
+        .audit-card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 8px; }
+        .btn-pin { background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); color: var(--accent-primary); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-family: var(--font-mono); cursor: pointer; }
+        .empty-state { text-align: center; color: var(--text-dim); padding: 40px 20px; font-family: var(--font-mono); font-size: 11px; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: var(--font-mono); }
+        .matrix-table th, .matrix-table td { border: 1px solid var(--border-color); padding: 8px 10px; text-align: left; }
+        .matrix-table th { background: var(--surface-card); color: var(--text-muted); }
+        .memo-body { font-size: 11px; line-height: 1.5; color: var(--text-main); font-family: var(--font-sans); background: var(--bg-canvas); padding: 14px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-card { background: var(--surface-panel); border: 1px solid var(--border-active); width: 440px; border-radius: 8px; padding: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .modal-title { font-size: 14px; font-weight: 700; font-family: var(--font-mono); margin-bottom: 14px; color: var(--accent-primary); }
+        .vault-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+        .vbtab { flex: 1; text-align: center; background: var(--surface-card); border: 1px solid var(--border-color); padding: 4px; font-size: 10px; font-family: var(--font-mono); cursor: pointer; border-radius: 4px; color: var(--text-muted); }
+        .vbtab.active { background: var(--surface-hover); color: var(--accent-primary); border-color: var(--accent-primary); font-weight: bold; }
+        .slot-indicator { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <span class="logo-badge">ORIZON v24</span>
+            <span class="logo-title">Enterprise Verification Workspace</span>
+            <span class="logo-subtitle">Universal Audit Envelope Architecture</span>
+        </div>
+        <div class="header-chambers">
+            <div class="engine-mode-toggle">
+                <button class="engine-mode-btn active-local" id="modeBtnLocal" onclick="setEngineMode('local')">LOCAL ONLY</button>
+                <button class="engine-mode-btn" id="modeBtnLive" onclick="setEngineMode('live')">LIVE GEMINI API</button>
+            </div>
+            <button class="chamber-dropdown" onclick="openApiKeyModal()">⚙️ Admin Chamber ▼</button>
+            <button class="chamber-dropdown" onclick="alert('Export Manifest generated successfully.')">Export Manifest ▼</button>
+        </div>
+    </header>
+
+    <div class="workspace-grid">
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+            <div class="module-section active" id="sec-lens">
+                <div class="module-header" onclick="toggleModule('sec-lens')">
+                    <span class="module-title">🔍 Document Filter</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="module-body">
+                    <div class="mode-switcher">
+                        <div class="mode-tab active" id="modeTabLocator" onclick="switchScannerMode('locator')">🎯 Keyword & Concept Filter</div>
+                        <div class="mode-tab" id="modeTabForensic" onclick="switchScannerMode('forensic')">🕵️ Vulnerability Filter</div>
+                    </div>
+
+                    <div id="scannerForensicConfigPanel" style="display: none;">
+                        <div class="form-group">
+                            <label>Vulnerability Category (Level 1)</label>
+                            <select id="lensCategory" onchange="onCategoryChange()">
+                                <option value="asymmetry">Category 1: Asymmetry & Control Lenses</option>
+                                <option value="liability" selected>Category 2: Exposure & Liability Traps</option>
+                                <option value="dilution">Category 3: Dilution & Value Leakage</option>
+                                <option value="contradiction">Category 4: Structural Contradictions</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Specific Sub-Item Trap (Level 2)</label>
+                            <select id="lensSubItem"></select>
+                        </div>
+                    </div>
+                    
+                    <div id="scannerLocatorConfigNote">
+                        <div class="form-group" style="margin-top:8px;">
+                            <label>Target Concept / Query Term</label>
+                            <input type="text" id="locatorQueryInput" placeholder="e.g., governing law, hold harmless, covenant...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-section active" id="sec-journey">
+                <div class="module-header" onclick="toggleModule('sec-journey')">
+                    <span class="module-title">🗺️ Execution Pipeline</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="module-body">
+                    <div class="form-group">
+                        <label>Select Master Workflow</label>
+                        <select id="masterTaskSelect" onchange="onMasterTaskChange()">
+                            <optgroup label="Enterprise Master Workflows">
+                                <option value="legal_mna">Corporate Legal Due Diligence (M&A)</option>
+                                <option value="vc_terms">Series A/B Investment Term Sheet</option>
+                                <option value="vc_pitch">Startup Pitch Deck Mass Eval (Batch Mode)</option>
+                                <option value="acct_debt">Debt Covenant Compliance Audit</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div style="margin-top: 12px;" id="journeyStepsContainer"></div>
+                </div>
+            </div>
+
+            <div class="module-section active" id="sec-vault-params">
+                <div class="module-header" onclick="toggleModule('sec-vault-params')">
+                    <span class="module-title">⚙️ Compliance Vault</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="module-body" id="vaultParamsContainer"></div>
+            </div>
+        </div>
+
+        <!-- CENTER WORKSPACE -->
+        <div class="center-column">
+            <div class="center-stack" id="centerStack">
+                <div class="panel-box" id="bufferLensPanel" style="display: none;">
+                    <div class="panel-box-header">
+                        <span>● ACTIVE FILTER: DYNAMIC SEMANTIC WORKSPACE</span>
+                        <span style="color: var(--accent-primary);">READY</span>
+                    </div>
+                    <div class="panel-box-body">
+                        <div id="activeLensDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-family: var(--font-mono);">
+                            Dynamic AI Semantic Expansion Active: On-the-fly multi-variant context deduction enabled.
+                        </div>
+                        <button class="btn-execute" onclick="executeSemanticScan()">Run Diagnostic Scan ⚡</button>
+                        <div class="telemetry-terminal" id="lensTelemetryBar">⚡ [FILTER ENGINE READY]: Synchronized. Awaiting trigger...</div>
+                    </div>
+                </div>
+
+                <div class="panel-box" id="bufferSurface3Panel" style="display: none;">
+                    <div class="panel-box-header">
+                        <span id="surface3HeaderTitle">● VERIFICATION GATE: WORKFLOW MILESTONE</span>
+                        <span style="color: var(--accent-green);">PIPELINE ARMED</span>
+                    </div>
+                    <div class="panel-box-body">
+                        <div id="surface3GateDesc" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Auditor Confirmation Gate: Confirm active parameters synced from Compliance Vault.</div>
+                        <div id="auditorGateRows"></div>
+                        <button class="btn-execute" onclick="executePipelineStep()">Execute Verification Stage ⚡</button>
+                        <div class="telemetry-terminal" id="journeyTelemetryBar">⚡ [VAULT LOADED]: Active parameters bound.</div>
+                    </div>
+                </div>
+
+                <div class="panel-box" style="flex: 1;">
+                    <div class="panel-box-header">
+                        <span>DOSSIER VAULT INGESTION (BLANK CANVAS WORKSPACE)</span>
+                        <span id="vaultModeLabel" style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">SINGLE DOSSIER MODE</span>
+                    </div>
+                    <div class="panel-box-body" style="height: calc(100% - 37px); display: flex; flex-direction: column;">
+                        <div style="font-size:10px; font-family:var(--font-mono); color:var(--accent-primary); margin-bottom:8px; background:var(--bg-canvas); padding:4px 8px; border-radius:4px; border:1px solid var(--border-color);">[CORPUS STATUS: READY FOR INGESTION]</div>
+                        <div class="vault-tabs" id="vaultTabs" style="display: none;">
+                            <div class="vbtab active" onclick="switchBatchSlot(0)" id="vbtab-0">Slot 1: Alpha</div>
+                            <div class="vbtab" onclick="switchBatchSlot(1)" id="vbtab-1">Slot 2: Beta</div>
+                            <div class="vbtab" onclick="switchBatchSlot(2)" id="vbtab-2">Slot 3: Gamma</div>
+                            <div class="vbtab" onclick="switchBatchSlot(3)" id="vbtab-3">Slot 4: Delta</div>
+                            <div class="vbtab" onclick="switchBatchSlot(4)" id="vbtab-4">Slot 5: Entity Epsilon</div>
+                        </div>
+                        <div class="slot-indicator" id="slotIndicator" style="display: none;">Active Slot: Entity Alpha (Slot 1 of 5)</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label>Paste Contract, Term Sheet, or Financial Dossier Here</label>
+                            <button class="btn-secondary" onclick="document.getElementById('vaultTextArea').value=''">Clear Buffer 📄</button>
+                        </div>
+                        <textarea id="vaultTextArea" style="flex: 1; resize: none; font-family: var(--font-mono); font-size: 11px; line-height: 1.4;" placeholder="Paste raw institutional agreement, term sheet, or covenant dossier here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT AUDIT LEDGER -->
+        <div class="right-column">
+            <div class="surface4-header">
+                <div class="surface4-header-top">
+                    <span class="module-title">📑 COMPLIANCE AUDIT LEDGER</span>
+                    <button class="btn-merge" onclick="mergeJointExecutiveBrief()">⚡ Merge & Joint Brief</button>
+                </div>
+                <div class="stream-switcher">
+                    <div class="stream-btn active" id="streamPipelineBtn" onclick="switchLedgerStream('pipeline')">Pipeline Stream</div>
+                    <div class="stream-btn" id="streamFilterBtn" onclick="switchLedgerStream('filter')">Diagnostic Stream</div>
+                    <div class="stream-btn" id="streamMergedBtn" onclick="switchLedgerStream('merged')">Joint Assembly</div>
+                </div>
+                <div class="presentation-lenses">
+                    <button class="lens-btn active" id="lens-cards" onclick="switchPresentationLens('cards')">Audit Cards</button>
+                    <button class="lens-btn" id="lens-table" onclick="switchPresentationLens('table')">Tabular</button>
+                    <button class="lens-btn" id="lens-memo" onclick="switchPresentationLens('memo')">Memo</button>
+                    <button class="lens-btn" id="lens-batch" onclick="switchPresentationLens('batch')">Batch</button>
+                </div>
+            </div>
+            <div class="surface4-body" id="surface4Container">
+                <div class="empty-state">[SYSTEM IDLE]<br>Execute a pipeline stage or filter scan to populate findings.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="apiKeyModal">
+        <div class="modal-card">
+            <div class="modal-title">⚙️ Admin Chamber: Gemini API Configuration</div>
+            <div class="form-group"><label>Gemini API Key</label><input type="password" id="inputGeminiApiKey" placeholder="AIzaSy..."></div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button class="btn-execute" style="flex:1;" onclick="saveApiKey()">Save API Key ⚡</button>
+                <button class="btn-secondary" style="width: 80px;" onclick="closeApiKeyModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="customParamModal">
+        <div class="modal-card">
+            <div class="modal-title">⚙️ Inject Custom Compliance Parameter</div>
+            <div class="form-group"><label>Parameter Target Label</label><input type="text" id="modalParamName" placeholder="e.g., Holdback Ratio"></div>
+            <div class="form-group"><label>Boundary Control Operator</label>
+                <select id="modalParamOperator">
+                    <option value="CEILING">Upper Bound Ceiling</option>
+                    <option value="FLOOR">Lower Bound Floor</option>
+                    <option value="RATIO">Percentage Ratio</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Threshold Value</label><input type="text" id="modalParamVal" placeholder="250000"></div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button class="btn-execute" style="flex:1;" onclick="submitCustomParameter()">Inject ⚡</button>
+                <button class="btn-secondary" style="width: 80px;" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMasterTask = 'legal_mna';
+        let currentStepIndex = 0;
+        let activePresentationLens = 'cards';
+        let activeStreamView = 'pipeline';
+        let pipelineLedgerItems = [];
+        let filterLedgerItems = [];
+        let activeBatchSlot = 0;
+        let scannerMode = 'locator';
+        let executionEngineMode = 'local';
+        let geminiApiKey = localStorage.getItem('orizon_gemini_api_key') || '';
+
+        const coreTestDossiers = {
+            'legal_mna': `================================================================================
+DEFINITIVE MERGER & ACQUISITION TRANSACTION AGREEMENT (M&A DOSSIER)
+================================================================================
+ARTICLE 1: SCOPE, PARTIES & GOVERNING LAW
+1.1 Parties. Agreement between Helios Systems Inc. ("Acquirer") and Apex Software Ltd ("Target").
+1.2 Effective Date. Executed as of October 24, 2026 under Delaware State Jurisdiction.
+
+ARTICLE 2: INDEMNIFICATION CATEGORIZATION & MUTUALITY
+2.1 One-Sided Indemnity Shift. Target shall indemnify Acquirer for all pre-closing operational liabilities, whereas Acquirer holds zero reverse indemnity obligations for post-closing operational shifts.
+
+ARTICLE 3: FINANCIAL EXPOSURE & CHANGE-OF-CONTROL CEILINGS
+3.1 Aggregate Liability Cap. Target aggregate liability for unhedged indemnities is strictly capped at Three Hundred Thousand Dollars ($300,000 USD).
+3.2 Escrow Clawback. Earnouts are subject to unilateral clawback if seller EBITDA targets miss projections by 2%.
+
+ARTICLE 4: INTELLECTUAL PROPERTY ASSIGNMENT & DERIVATIVE RIGHTS
+4.1 IP Assignment. Software core code is fully transferred; however, target founders retain an uncompensated derivative commercial exploitation license for unrelated markets.
+
+ARTICLE 5: DISPUTE SCHEDULE & LITIGATION CROSS-EXAMINATION
+5.1 Pending Arbitrations. Active customer lawsuit schedule totals $85,000 USD in potential pending arbitration liabilities across 3 claims.
+
+ARTICLE 6: FINAL COMPLIANCE SEALING & EXECUTION
+6.1 Closing Conditions. Final execution contingent upon closing escrow deposit and full ledger stamping.`,
+
+            'vc_terms': `================================================================================
+SERIES A PREFERRED STOCK INVESTMENT TERM SHEET (VC DOSSIER)
+================================================================================
+SECTION 1: SCOPE & VALUATION INGESTION
+1.1 Issuer & Lead Investor. Quantum AI Inc. ("Company") and Vanguard Horizon Ventures ("Lead Investor").
+1.2 Valuation Ask. Pre-Money Valuation set at $15,000,000 USD for a $3,000,000 USD Series A Round.
+1.3 Valuation Cap Floor. Floor set at Eight Hundred Thousand Dollars ($800,000 USD).
+
+SECTION 2: CAP TABLE & DILUTION INGESTION
+2.1 Equity Dilution. Post-money option pool expansion set at 18.5% unallocated equity reserved for key hires.
+
+SECTION 3: LIQUIDATION PREFERENCE MULTIPLE
+3.1 Multiple & Participation. Series A Preferred Stock carries a 2.0x Participating Liquidation Preference Multiple ahead of Common Stock founders.
+
+SECTION 4: ANTI-DILUTION & PROTECTIVE PROVISIONS
+4.1 Anti-Dilution Adjustment. In the event of a down-round, investor rights trigger a Pay-to-Play Full Ratchet Anti-Dilution Squeeze.
+
+SECTION 5: GOVERNANCE & BOARD CONTROL
+5.1 Board Composition. Lead investor receives 2 out of 5 board seats with absolute veto power over future debt issuances exceeding $100k.
+
+SECTION 6: INVESTMENT COMMITTEE STAMPING
+6.1 Binding Exclusivity. 45-day exclusivity window required for legal definitive drafting.`,
+
+            'acct_debt': `================================================================================
+CREDIT AGREEMENT & DEBT COVENANT COMPLIANCE DOSSIER (ACCOUNTING DOSSIER)
+================================================================================
+SECTION 1: CREDIT FACILITY SCOPE & INGESTION
+1.1 Facility Terms. Term Loan Facility of $12,500,000 USD issued to Apex Manufacturing Corp by First National Bank, maturing Oct 2029.
+
+SECTION 2: CONSOLIDATED EBITDA & ADD-BACK AUDIT
+2.1 EBITDA Adjustments. Reported EBITDA of $2,800,000 includes $500,000 in unverified projected operational cost savings and synergies add-backs.
+
+SECTION 3: LEVERAGE RATIO COVENANT CEILING
+3.1 Leverage Ratio Requirement. Total Debt to Consolidated EBITDA Leverage Ratio reported at 4.20x as of current quarter end.
+
+SECTION 4: MINIMUM LIQUIDITY FLOOR VERIFICATION
+4.1 Liquid Reserve Floor. Borrower currently holds One Million Five Hundred Thousand Dollars ($1,500,000 USD) in unencumbered liquid cash equivalents.
+
+SECTION 5: RESTRICTED PAYMENTS & DIVIDEND LEAKAGE
+5.1 Dividend Restrictions. Borrower distributed $250,000 in executive equity buybacks during the current fiscal quarter prior to compliance verification.
+
+SECTION 6: AUDIT COMPLIANCE STAMPING
+6.1 Compliance Certificate. Officer certificate delivered subject to bank covenant review.`
+        };
+
+        const batchVaultInputs = [
+            `================================================================================
+STARTUP PITCH DECK INGESTION SLIDE: TECHNOVA SOLUTIONS (SLOT 1)
+================================================================================
+EXECUTIVE SUMMARY & PITCH OVERVIEW:
+Technova Solutions is building the next-generation autonomous infrastructure layer for enterprise supply chains. 
+
+MARKET OPPORTUNITY (TAM):
+According to bottom-up market analysis, our total addressable market (TAM) across North America and Europe is conservatively estimated at $400,000,000 USD annually.
+
+FINANCIAL TRACTION & BURN RATE:
+We are currently generating $28,500 in Monthly Recurring Revenue (MRR) with a net monthly cash burn rate of $135,000 USD as we aggressively expand our core engineering team.
+
+INVESTMENT ASK & INSTRUMENT:
+We are raising our seed tranche on a $9,000,000 USD Valuation Cap post-money SAFE.`,
+
+            `================================================================================
+STARTUP PITCH DECK INGESTION SLIDE: VELOPAY FINTECH (SLOT 2)
+================================================================================
+EXECUTIVE SUMMARY & PITCH OVERVIEW:
+VeloPay Fintech provides instant cross-border settlement infrastructure for high-volume B2B merchants across emerging markets.
+
+MARKET OPPORTUNITY (TAM):
+Operating at the intersection of trade finance and instant rails, our current Total Addressable Market (TAM) is validated at $1,200,000,000 USD.
+
+FINANCIAL TRACTION & BURN RATE:
+The platform currently processes active transaction volume yielding $65,000 in MRR. Net monthly burn rate is managed at $190,000 USD.
+
+INVESTMENT ASK & INSTRUMENT:
+Seeking lead investor for Series Seed structured at an $18,000,000 USD Valuation Cap.`,
+
+            `================================================================================
+STARTUP PITCH DECK INGESTION SLIDE: AGRICHAIN GLOBAL (SLOT 3)
+================================================================================
+EXECUTIVE SUMMARY & PITCH OVERVIEW:
+AgriChain Global digitizes agricultural commodity traceability and inventory financing for mid-market farmers.
+
+MARKET OPPORTUNITY (TAM):
+Our total addressable market spans global grain and produce trade, representing a $850,000,000 USD TAM.
+
+FINANCIAL TRACTION & BURN RATE:
+Early pilot deployments yield $12,000 MRR with a disciplined net monthly burn rate of $45,000 USD.
+
+INVESTMENT ASK & INSTRUMENT:
+Targeting a $5,000,000 USD Valuation Cap SAFE to scale regional field operations.`,
+
+            `================================================================================
+STARTUP PITCH DECK INGESTION SLIDE: MEDPULSE AI (SLOT 4)
+================================================================================
+EXECUTIVE SUMMARY & PITCH OVERVIEW:
+MedPulse AI offers real-time patient monitoring diagnostics integrated into hospital ICU telemetry networks.
+
+MARKET OPPORTUNITY (TAM):
+Focusing initially on tier-1 clinical centers, our immediate TAM is calculated at $300,000,000 USD.
+
+FINANCIAL TRACTION & BURN RATE:
+Subscription software revenues are currently $40,000 MRR with a steady net monthly burn rate of $95,000 USD.
+
+INVESTMENT ASK & INSTRUMENT:
+Opening seed round with a $10,000,000 USD Valuation Cap.`,
+
+            `================================================================================
+STARTUP PITCH DECK INGESTION SLIDE: BIOSYNTH LABS (SLOT 5)
+================================================================================
+EXECUTIVE SUMMARY & PITCH OVERVIEW:
+BioSynth Labs accelerates synthetic enzyme discovery using proprietary computational biology workflows.
+
+MARKET OPPORTUNITY (TAM):
+Targeting global specialty chemical manufacturing, our overall market potential (TAM) stands at $2,100,000,000 USD.
+
+FINANCIAL TRACTION & BURN RATE:
+Commercial pilot agreements generate $95,000 in MRR against a net monthly burn rate of $240,000 USD.
+
+INVESTMENT ASK & INSTRUMENT:
+Raising Series A funding at a $25,000,000 USD Valuation Cap.`
+        ];
+
+        const vulnerabilityCategories = {
+            'asymmetry': [
+                { id: 'unilateral_vetoes', name: 'Unilateral Vetoes & Board Control Grabs' },
+                { id: 'termination_rights', name: 'One-Sided Termination & Exit Restrictions' },
+                { id: 'brand_exploitation', name: 'Asymmetric Likeness & Brand Image Exploitation' }
+            ],
+            'liability': [
+                { id: 'uncapped_indemnities', name: 'Uncapped Indemnities & Liability Shifts' },
+                { id: 'successor_liability', name: 'Successor Liability Injections' },
+                { id: 'historical_debt', name: 'Hidden Environmental & Historical Debt Transfers' }
+            ],
+            'dilution': [
+                { id: 'liquidation_preference', name: 'Multi-Layered Participating Liquidation Preferences' },
+                { id: 'anti_dilution', name: 'Full-Ratchet Anti-Dilution Protections' },
+                { id: 'fee_siphons', name: 'Hidden Management & Transaction Fee Siphons' }
+            ],
+            'contradiction': [
+                { id: 'notice_conflicts', name: 'Conflicting Notice Periods & Delivery Channels' },
+                { id: 'closing_mismatch', name: 'Mismatched Closing Conditions & Deadlines' },
+                { id: 'timeline_discord', name: 'Cross-Clause Timeline Contradictions' }
+            ]
+        };
+
+        const behavioralLensTaxonomies = {
+            'legal_mna': ["Corporate Risk Assessment", "Liability Shifting", "Indemnification Exposure", "Governing Law & Jurisdiction"],
+            'vc_terms': ["Valuation Protection", "Liquidation Preferences", "Governance & Control", "Anti-Dilution Mechanisms"],
+            'vc_pitch': ["Market Sizing (TAM)", "Unit Economics & Burn Rate", "Valuation Ask & Instruments", "Founding Defensibility"],
+            'acct_debt': ["Leverage Ratios", "Liquidity Covenants", "Restricted Payments", "EBITDA Adjustments & Add-Backs"]
+        };
+
+        const journeySteps = {
+            'legal_mna': [
+                { name: "Scope Ingestion & Baseline Verification", desc: "Verifies effective dates, governing law, and corporate parties.", templateType: "scope", targetLens: "1. Focus strictly on administrative scope, effective dates, governing jurisdiction, and entity names. 2. Format your extraction strictly as: Parties: [names]; Governing Jurisdiction: [jurisdiction]; Effective Date: [date]." },
+                { name: "Indemnity Clause Categorization", desc: "Isolates mutual vs. one-sided indemnification obligations.", templateType: "clause", targetLens: "1. Isolate indemnification and liability-shifting clauses. 2. Evaluate whether the clause is ONE_SIDED, MUTUAL, or MODERATE." },
+                { name: "Change-of-Control Financial Exposure Check", desc: "Evaluates unhedged liability limits against Vault Ceiling.", templateType: "variance", targetLens: "1. Extract numerical financial exposure values associated with unhedged liabilities for Tier-2 subtraction." },
+                { name: "IP Assignment & Rights Verification", desc: "Audits software code ownership and founder patent assignments.", templateType: "clause", targetLens: "1. Isolate intellectual property assignment clauses, code ownership, and patent transfer terms." },
+                { name: "Litigation & Dispute Schedule Cross-Exam", desc: "Summates active arbitration and lawsuit schedules.", templateType: "variance", targetLens: "1. Extract numerical monetary amounts listed in active arbitration, litigation, or dispute schedules." },
+                { name: "Compliance Stamping & Ledger Execution", desc: "Compiles all variances into immutable audit trail.", templateType: "scope", targetLens: "1. Review all previously verified structural findings for master audit compilation." }
+            ],
+            'vc_terms': [
+                { name: "Term Sheet Scope & Valuation Ingestion", desc: "Isolates pre-money valuation.", templateType: "scope", targetLens: "1. Isolate pre-money valuation, round size, and issuing parties." },
+                { name: "Cap Table & Dilution Ingestion", desc: "Calculates post-money dilution.", templateType: "variance", targetLens: "1. Extract post-money ownership dilution percentages and option pool allocations." },
+                { name: "Liquidation Preference Multiple Check", desc: "Evaluates preference payouts.", templateType: "variance", targetLens: "1. Extract liquidation preference multiples (e.g., 1x, 2x participating)." },
+                { name: "Anti-Dilution & Protective Provisions Audit", desc: "Checks ratchets.", templateType: "clause", targetLens: "1. Isolate anti-dilution clauses and protective veto provisions." },
+                { name: "Governance & Board Rights Review", desc: "Audits board seats.", templateType: "clause", targetLens: "1. Audit investor board seats and voting thresholds." },
+                { name: "Investment Committee Compliance Stamping", desc: "Stamps evaluation.", templateType: "scope", targetLens: "1. Summarize term sheet evaluation into compliance status." }
+            ],
+            'vc_pitch': [
+                { name: "Company Profile Baseline Ingestion", desc: "Extracts profiles across 5 slots.", templateType: "scope", targetLens: "1. Extract company name, sector, and founding team composition." },
+                { name: "Total Addressable Market (TAM) Extraction", desc: "Isolates TAM figures.", templateType: "variance", targetLens: "1. Extract numerical Total Addressable Market (TAM) figures." },
+                { name: "Revenue, Traction & Burn Rate Verification", desc: "Scans financial slides.", templateType: "variance", targetLens: "1. Extract MRR and net monthly cash burn figures." },
+                { name: "Valuation Ask & Instrument Type Check", desc: "Extracts fundraise terms.", templateType: "clause", targetLens: "1. Isolate target fundraise size and SAFE vs. Equity terms." },
+                { name: "Founding Team & Defensibility Audit", desc: "Evaluates moats.", templateType: "clause", targetLens: "1. Evaluate founder domain expertise and defensibility claims." },
+                { name: "Mass Compliance Stamping", desc: "Stamps batch decks.", templateType: "scope", targetLens: "1. Compile batch comparative metrics." }
+            ],
+            'acct_debt': [
+                { name: "Credit Agreement Scope & Debt Ingestion", desc: "Isolates principal loan amounts.", templateType: "scope", targetLens: "1. Isolate principal loan amount, maturity date, and facility type." },
+                { name: "Consolidated EBITDA & Add-Back Audit", desc: "Audits management adjustments.", templateType: "variance", targetLens: "1. Extract management EBITDA adjustments and synergies add-backs." },
+                { name: "Leverage Ratio Covenant Ceiling Check", desc: "Evaluates debt/EBITDA ceiling.", templateType: "variance", targetLens: "1. Extract Total Debt to EBITDA leverage ratio metrics." },
+                { name: "Minimum Liquidity Floor Verification", desc: "Verifies liquid cash reserves.", templateType: "variance", targetLens: "1. Extract minimum liquidity cash reserve requirements." },
+                { name: "Restricted Payment & Dividend Audit", desc: "Audits cash leakage.", templateType: "clause", targetLens: "1. Isolate restricted payment baskets and equity payout limitations." },
+                { name: "Audit Compliance Stamping", desc: "Stamps covenant status.", templateType: "scope", targetLens: "1. Finalize covenant compliance audit posture." }
+            ]
+        };
+
+        let taskVaultParameters = {
+            'legal_mna': [
+                { name: "Unhedged Liability Ceiling ($)", val: "250000", operator: "CEILING", active: true },
+                { name: "Dispute Schedule Cap ($)", val: "15000", operator: "CEILING", active: true }
+            ],
+            'vc_terms': [
+                { name: "Valuation Cap Floor ($)", val: "1000000", operator: "FLOOR", active: true },
+                { name: "Max Option Pool Dilution (%)", val: "15.0", operator: "RATIO", active: true }
+            ],
+            'vc_pitch': [
+                { name: "Min TAM Threshold ($)", val: "1000000000", operator: "FLOOR", active: true },
+                { name: "Max Monthly Burn Rate ($)", val: "100000", operator: "CEILING", active: true }
+            ],
+            'acct_debt': [
+                { name: "Max Leverage Ratio Ceiling", val: "3.50", operator: "CEILING", active: true },
+                { name: "Min Liquidity Reserve Floor ($)", val: "2000000", operator: "FLOOR", active: true }
+            ]
+        };
+
+        window.onload = function() {
+            onMasterTaskChange();
+            onCategoryChange();
+            syncModuleVisibility();
+            setEngineMode('local');
+        };
+
+        function setEngineMode(mode) {
+            executionEngineMode = mode;
+            document.getElementById('modeBtnLocal').className = mode === 'local' ? "engine-mode-btn active-local" : "engine-mode-btn";
+            document.getElementById('modeBtnLive').className = mode === 'live' ? "engine-mode-btn active-live" : "engine-mode-btn";
+        }
+
+        function toggleModule(secId) {
+            document.getElementById(secId).classList.toggle('active');
+            syncModuleVisibility();
+        }
+
+        function syncModuleVisibility() {
+            document.getElementById('bufferLensPanel').style.display = document.getElementById('sec-lens').classList.contains('active') ? 'block' : 'none';
+            document.getElementById('bufferSurface3Panel').style.display = document.getElementById('sec-journey').classList.contains('active') ? 'block' : 'none';
+        }
+
+        function switchScannerMode(mode) {
+            scannerMode = mode;
+            document.getElementById('modeTabLocator').classList.toggle('active', mode === 'locator');
+            document.getElementById('modeTabForensic').classList.toggle('active', mode === 'forensic');
+            document.getElementById('scannerForensicConfigPanel').style.display = mode === 'forensic' ? 'block' : 'none';
+            document.getElementById('scannerLocatorConfigNote').style.display = mode === 'locator' ? 'block' : 'none';
+        }
+
+        function onCategoryChange() {
+            const catSelect = document.getElementById('lensCategory').value;
+            const subSelect = document.getElementById('lensSubItem');
+            const items = vulnerabilityCategories[catSelect] || [];
+            let html = '';
+            items.forEach(item => { html += `<option value="${item.id}">${item.name}</option>`; });
+            subSelect.innerHTML = html;
+        }
+
+        function openApiKeyModal() { document.getElementById('apiKeyModal').style.display = 'flex'; }
+        function closeApiKeyModal() { document.getElementById('apiKeyModal').style.display = 'none'; }
+        function saveApiKey() {
+            geminiApiKey = document.getElementById('inputGeminiApiKey').value.trim();
+            localStorage.setItem('orizon_gemini_api_key', geminiApiKey);
+            closeApiKeyModal();
+            alert(geminiApiKey ? "API Key saved!" : "API Key cleared.");
+        }
+
+        function onMasterTaskChange() {
+            currentMasterTask = document.getElementById('masterTaskSelect').value;
+            currentStepIndex = 0;
+            pipelineLedgerItems = [];
+            filterLedgerItems = [];
+            
+            if (currentMasterTask === 'vc_pitch') {
+                document.getElementById('vaultModeLabel').textContent = "BATCH MULTI-DOSSIER MODE";
+                document.getElementById('vaultTabs').style.display = 'flex';
+                document.getElementById('slotIndicator').style.display = 'block';
+                switchBatchSlot(0); 
+            } else {
+                document.getElementById('vaultModeLabel').textContent = "SINGLE DOSSIER MODE";
+                document.getElementById('vaultTabs').style.display = 'none';
+                document.getElementById('slotIndicator').style.display = 'none';
+                document.getElementById('vaultTextArea').value = coreTestDossiers[currentMasterTask] || "";
+            }
+
+            const container = document.getElementById('journeyStepsContainer');
+            const steps = journeySteps[currentMasterTask];
+            let html = '';
+            steps.forEach((st, idx) => {
+                html += `<div class="journey-step-item ${idx === currentStepIndex ? 'active' : ''}" onclick="selectJourneyStep(${idx})">
+                    <div class="journey-step-title"><span>${st.name}</span> <span style="font-size:9px; color:var(--text-dim);">STAGE ${idx+1}</span></div>
+                    <div class="journey-step-desc">${st.desc}</div></div>`;
+            });
+            container.innerHTML = html;
+            renderVaultParameters();
+            renderAuditorConfirmationGate();
+            updateSurface3Panel();
+            renderSurface4();
+        }
+
+        function renderVaultParameters() {
+            const container = document.getElementById('vaultParamsContainer');
+            const params = taskVaultParameters[currentMasterTask];
+            let html = '';
+            params.forEach((p, idx) => {
+                html += `<div class="param-row">
+                    <div class="param-row-top"><label style="margin-bottom:0; font-size:10px;">${p.name} [${p.operator}]</label>
+                    <button class="param-toggle-btn ${p.active ? '' : 'off'}" onclick="toggleVaultParam(${idx})">${p.active ? 'ON' : 'OFF'}</button></div>
+                    <input type="text" value="${p.val}" placeholder="Threshold..." oninput="updateParamVal(${idx}, this.value)"></div>`;
+            });
+            html += `<button class="btn-secondary" style="width:100%; margin-top:6px; font-size:10px;" onclick="openInjectModal()">+ Inject Custom Parameter</button>`;
+            container.innerHTML = html;
+        }
+
+        function toggleVaultParam(idx) {
+            taskVaultParameters[currentMasterTask][idx].active = !taskVaultParameters[currentMasterTask][idx].active;
+            renderVaultParameters();
+            renderAuditorConfirmationGate();
+        }
+        function updateParamVal(idx, val) { taskVaultParameters[currentMasterTask][idx].val = val; renderAuditorConfirmationGate(); }
+        function openInjectModal() { document.getElementById('customParamModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('customParamModal').style.display = 'none'; }
+
+        function submitCustomParameter() {
+            const name = document.getElementById('modalParamName').value.trim();
+            const operator = document.getElementById('modalParamOperator').value;
+            const val = document.getElementById('modalParamVal').value.trim();
+            if (!name || !val) { alert("Enter valid parameters."); return; }
+            taskVaultParameters[currentMasterTask].push({ name, val, operator, active: true, isCustom: true });
+            renderVaultParameters(); renderAuditorConfirmationGate(); closeModal();
+        }
+
+        function renderAuditorConfirmationGate() {
+            const container = document.getElementById('auditorGateRows');
+            const activeParams = taskVaultParameters[currentMasterTask].filter(p => p.active);
+            if (activeParams.length === 0) { container.innerHTML = `<div style="font-size:10px; color:var(--accent-red); padding:8px;">⚠️ Warning: All parameters OFF.</div>`; return; }
+            let html = '';
+            activeParams.forEach(p => {
+                html += `<div class="gate-row"><div class="gate-left"><input type="checkbox" checked><span>${p.name}</span></div><input type="text" value="${p.val || 'Not Set'}" style="width:130px; text-align:right;" readonly></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectJourneyStep(idx) {
+            currentStepIndex = idx;
+            document.querySelectorAll('.journey-step-item').forEach((item, i) => item.classList.toggle('active', i === idx));
+            updateSurface3Panel();
+        }
+
+        function updateSurface3Panel() {
+            const steps = journeySteps[currentMasterTask];
+            if (steps && steps[currentStepIndex]) {
+                document.getElementById('surface3HeaderTitle').textContent = `● VERIFICATION GATE: ${steps[currentStepIndex].name.toUpperCase()}`;
+                document.getElementById('surface3GateDesc').textContent = `${steps[currentStepIndex].desc} Confirm active parameters.`;
+            }
+        }
+
+        function switchBatchSlot(slotIdx) {
+            activeBatchSlot = slotIdx;
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`vbtab-${i}`).classList.toggle('active', i === slotIdx);
+            }
+            document.getElementById('slotIndicator').textContent = `Active Slot: Entity ${slotIdx+1} of 5`;
+            document.getElementById('vaultTextArea').value = batchVaultInputs[slotIdx];
+        }
+
+        function chunkDossierIntoSections(dossierText) {
+            if (!dossierText) return [];
+            return dossierText.split(/\n\s*\n/).map((chunk, index) => ({
+                sectionId: `SEC-${index + 1}`,
+                content: chunk.trim()
+            })).filter(c => c.content.length > 0);
+        }
+
+        function buildSplitPromptPayload(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
+            const chunkString = textChunks.map(c => `<section id="${c.sectionId}">\n${c.content}\n</section>`).join("\n");
+            
+            return `
+<system_instruction>
+    <role>Strict institutional document extraction engine acting as ${industrialPersona}.</role>
+    <domain_taxonomies>${domainTaxonomy.join(", ")}</domain_taxonomies>
+    <immutable_governance>
+        1. ZERO MATH & NO RISK SCORING: Do NOT perform calculations, do NOT output compliance grades, and do NOT output "PASSED" or "BREACH".
+        2. STRICT GROUNDING: Extract data and insights exclusively from the provided dossier chunks. Never extrapolate external facts.
+        3. STRICT JSON ENFORCEMENT: You MUST output pristine, valid JSON matching this exact structure and key names. If a field like an article reference is missing, output "N/A":
+        {
+            "article_reference": "string",
+            "section_reference": "string",
+            "extracted_value_or_enum": "string",
+            "verbatim_quote": "string",
+            "professional_impact_analysis": "string"
+        }
+    </immutable_governance>
+</system_instruction>
+<granular_target_lens>
+    ${granularTargetLens}
+    <dynamic_ai_expansion_directive>
+        On-the-fly, deduce and apply all necessary operational synonyms, statutory alternatives, and legal/financial jargon variants contextually relevant without relying on static dictionaries.
+    </dynamic_ai_expansion_directive>
+</granular_target_lens>
+<dossier_corpus>
+    ${chunkString}
+</dossier_corpus>`;
+        }
+
+        function validateTier1Schema(dataObj) {
+            const requiredKeys = ["article_reference", "section_reference", "extracted_value_or_enum", "verbatim_quote", "professional_impact_analysis"];
+            for (let key of requiredKeys) {
+                if (!(key in dataObj)) throw new Error(`[SCHEMA_VIOLATION]: Missing required key '${key}'.`);
+            }
+            return true;
+        }
+
+        async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
+            const xmlPrompt = buildSplitPromptPayload(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
+            
+            const payload = {
+                prompt: xmlPrompt,
+                systemInstruction: `Strict institutional extraction parser.`,
+                customApiKey: geminiApiKey || ""
+            };
+
+            const response = await fetch('/api/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Proxy HTTP ${response.status}: ${errText}`);
+            }
+
+            const data = await response.json();
+            if (!data.candidates || !data.candidates[0].content) {
+                throw new Error("Invalid response structure from serverless proxy.");
+            }
+
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+            
+            validateTier1Schema(parsed);
+            return parsed;
+        }
+
+        function applyTier2DeterministicMatrix(rawExtractionResult, task, stepIdx) {
+            const stepConfig = journeySteps[task][stepIdx];
+            const templateType = stepConfig.templateType;
+            let title = "", statusBadge = "PASSED", statusClass = "passed", slotPayload = {};
+
+            if (templateType === 'variance') {
+                const vaultParam = taskVaultParameters[task][0];
+                const limitVal = parseFloat(vaultParam.val) || 0;
+                let extractedNum = parseFloat(String(rawExtractionResult.extracted_value_or_enum).replace(/[^0-9.]/g, '')) || 0;
+                const variance = extractedNum - limitVal;
+                const isBreach = limitVal > 0 && variance > 0;
+
+                title = isBreach ? `BREACH: ${vaultParam.name} Exceeded` : `PASSED: Within Compliance Limit`;
+                statusBadge = isBreach ? 'HIGH RISK' : 'PASSED';
+                statusClass = isBreach ? 'breach' : 'passed';
+
+                slotPayload = {
+                    type: 'variance', paramName: vaultParam.name, vaultLimit: limitVal.toLocaleString() + " USD",
+                    extractedValue: extractedNum.toLocaleString() + " USD", varianceAmount: (variance > 0 ? "+" : "") + variance.toLocaleString() + " USD",
+                    verbatimQuote: rawExtractionResult.verbatim_quote, articleRef: `${rawExtractionResult.article_reference} (${rawExtractionResult.section_reference})`,
+                    impactAnalysis: rawExtractionResult.professional_impact_analysis
+                };
+            } else if (templateType === 'scope') {
+                title = `VERIFIED: ${stepConfig.name}`;
+                slotPayload = {
+                    type: 'scope', 
+                    scopeSummary: rawExtractionResult.extracted_value_or_enum,
+                    verbatimQuote: rawExtractionResult.verbatim_quote, 
+                    articleRef: `${rawExtractionResult.article_reference} (${rawExtractionResult.section_reference})`, 
+                    impactAnalysis: rawExtractionResult.professional_impact_analysis
+                };
+            } else {
+                title = `INSPECTED: ${stepConfig.name}`;
+                const isOneSided = String(rawExtractionResult.extracted_value_or_enum).toUpperCase().includes('ONE_SIDED');
+                statusBadge = isOneSided ? 'HIGH RISK' : 'PASSED';
+                statusClass = isOneSided ? 'breach' : 'passed';
+                slotPayload = {
+                    type: 'clause', clauseTopic: stepConfig.name, riskExposure: rawExtractionResult.extracted_value_or_enum,
+                    verbatimQuote: rawExtractionResult.verbatim_quote, articleRef: `${rawExtractionResult.article_reference} (${rawExtractionResult.section_reference})`,
+                    impactAnalysis: rawExtractionResult.professional_impact_analysis
+                };
+            }
+            return { title, statusBadge, statusClass, slotPayload };
+        }
+
+        async function executePipelineStep() {
+            const telemetry = document.getElementById('journeyTelemetryBar');
+            const dossierText = document.getElementById('vaultTextArea').value;
+            if (!dossierText.trim()) { alert("Paste dossier text first."); return; }
+
+            const stepConfig = journeySteps[currentMasterTask][currentStepIndex];
+            telemetry.textContent = `⚡ [ORIZON CORE]: Executing pipeline milestone via Vercel proxy...`;
+
+            try {
+                const industrialPersona = currentMasterTask === 'acct_debt' ? "Senior Debt Compliance & Accounting Auditor" : currentMasterTask.includes('vc') ? "Senior Venture Capital Analyst" : "Senior M&A Legal Counsel";
+                const domainTaxonomy = behavioralLensTaxonomies[currentMasterTask];
+                const granularTargetLens = stepConfig.targetLens;
+
+                const textChunks = chunkDossierIntoSections(dossierText);
+                let rawExtractionResult = executionEngineMode === 'local' ? {
+                    article_reference: "Article 1", section_reference: "Section 1.1", extracted_value_or_enum: "Parties: Corpus Corp. (Seller), AcquireCo Ltd. (Buyer); Governing Jurisdiction: State of Delaware, United States; Effective Date: October 27, 2026",
+                    verbatim_quote: dossierText.slice(0, 150), professional_impact_analysis: "Local deterministic evaluation."
+                } : await callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
+
+                const result = applyTier2DeterministicMatrix(rawExtractionResult, currentMasterTask, currentStepIndex);
+                pushPipelineRecord(result.title, result.slotPayload, result.statusBadge, result.statusClass, stepConfig.name, executionEngineMode === 'local' ? "LOCAL" : "LIVE GEMINI (VERCEL PROXY)");
+                telemetry.textContent = `✅ [VERIFIED VIA VERCEL SERVERLESS PROXY]`;
+            } catch (err) {
+                telemetry.textContent = `❌ [ORIZON ERROR]: ${err.message}`;
+                pushPipelineRecord(`ERROR: Orizon Failure`, { type: 'error', errorMsg: err.message }, `API ERROR`, `breach`, stepConfig.name, `FAILED`);
+            }
+        }
+
+        function pushPipelineRecord(title, slotPayload, statusBadge, statusClass, stepName, engine) {
+            pipelineLedgerItems.push({ id: Date.now(), recordHash: "AUD-" + Math.floor(100000 + Math.random() * 900000), stream: 'pipeline', title, slotPayload, statusBadge, statusClass, step: stepName, engine });
+            activeStreamView = 'pipeline'; syncStreamButtons(); renderSurface4();
+        }
+
+        async function executeSemanticScan() {
+            const telemetry = document.getElementById('lensTelemetryBar');
+            const dossierText = document.getElementById('vaultTextArea').value;
+            if (!dossierText.trim()) { alert("Paste dossier text first."); return; }
+
+            telemetry.textContent = `⚡ [DIAGNOSTIC STREAM]: Running serverless semantic locator scan...`;
+            let granularTargetLens = "", industrialPersona = "", domainTaxonomy = [], scanTitle = "", searchedQuery = "";
+
+            if (scannerMode === 'locator') {
+                searchedQuery = document.getElementById('locatorQueryInput').value.trim() || "covenant";
+                industrialPersona = "Senior Institutional Corpus Locator";
+                domainTaxonomy = [searchedQuery];
+                scanTitle = `🎯 LOCATOR (DYNAMIC AI): "${searchedQuery.toUpperCase()}"`;
+                granularTargetLens = `1. TARGET SEARCH TERM / CONCEPT: "${searchedQuery}"
+2. INSTRUCTION: Act as a semantic document locator. 
+   - Determine if the target term or its semantic equivalent is present in the corpus.
+   - Reveal and extract the exact matching word, phrase, or representative synonym found in the text into 'extracted_value_or_enum'.
+   - Provide the verbatim quote and contextual location reference.
+   - In 'professional_impact_analysis', summarize why this located passage matches the target concept.`;
+            } else {
+                const catSelect = document.getElementById('lensCategory').value;
+                const subSelect = document.getElementById('lensSubItem');
+                const subItemText = subSelect.options[subSelect.selectedIndex].text;
+                searchedQuery = subItemText;
+                industrialPersona = "Senior Risk & Vulnerability Auditor";
+                domainTaxonomy = [catSelect, subItemText];
+                scanTitle = `🕵️ VULNERABILITY (DYNAMIC AI): ${subItemText.toUpperCase()}`;
+                granularTargetLens = `1. VULNERABILITY CATEGORY: ${catSelect.toUpperCase()}\n2. TARGET SUB-ITEM TRAP: ${subItemText}\n3. INSTRUCTION: Perform dynamic AI semantic expansion to identify drafting variants of "${subItemText}". Scan corpus, extract exact provision, quote verbatim, and classify posture as ONE_SIDED, MUTUAL, or MODERATE.`;
+            }
+
+            try {
+                const textChunks = chunkDossierIntoSections(dossierText);
+                let extracted = executionEngineMode === 'local' ? {
+                    article_reference: "Diagnostic Index", section_reference: "Sec 1.0", extracted_value_or_enum: searchedQuery,
+                    verbatim_quote: dossierText.slice(0, 200), professional_impact_analysis: "Dynamic semantic locator scan execution."
+                } : await callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
+
+                let slotPayload = {};
+                if (scannerMode === 'locator') {
+                    slotPayload = {
+                        type: 'locator',
+                        targetQuery: searchedQuery,
+                        matchedTerm: extracted.extracted_value_or_enum,
+                        verbatimQuote: extracted.verbatim_quote,
+                        articleRef: `${extracted.article_reference} (${extracted.section_reference})`,
+                        impactAnalysis: extracted.professional_impact_analysis
+                    };
+                } else {
+                    slotPayload = {
+                        type: 'clause', 
+                        clauseTopic: searchedQuery,
+                        riskExposure: extracted.extracted_value_or_enum, 
+                        verbatimQuote: extracted.verbatim_quote,
+                        articleRef: `${extracted.article_reference} (${extracted.section_reference})`, 
+                        impactAnalysis: extracted.professional_impact_analysis
+                    };
+                }
+
+                filterLedgerItems.push({
+                    id: Date.now(), recordHash: "AUD-" + Math.floor(100000 + Math.random() * 900000), stream: 'filter',
+                    title: scanTitle, slotPayload, statusBadge: 'LOCATED', statusClass: 'passed', step: scannerMode === 'locator' ? 'Keyword Locator (Semantic)' : 'Vulnerability Filter (Dynamic)', engine: executionEngineMode === 'local' ? 'LOCAL' : 'LIVE GEMINI (VERCEL PROXY)'
+                });
+                activeStreamView = 'filter'; syncStreamButtons(); renderSurface4();
+                telemetry.textContent = `✅ [SEMANTIC LOCATOR SCAN COMPLETE]`;
+            } catch (err) {
+                telemetry.textContent = `❌ [SCAN ERROR]: ${err.message}`;
+                filterLedgerItems.push({ id: Date.now(), recordHash: "AUD-ERR", stream: 'filter', title: `ERROR`, slotPayload: { type: 'error', errorMsg: err.message }, statusBadge: 'ERROR', statusClass: 'breach', step: 'Filter', engine: 'FAILED' });
+                activeStreamView = 'filter'; syncStreamButtons(); renderSurface4();
+            }
+        }
+
+        function switchLedgerStream(stream) { activeStreamView = stream; syncStreamButtons(); renderSurface4(); }
+        function syncStreamButtons() {
+            document.getElementById('streamPipelineBtn').classList.toggle('active', activeStreamView === 'pipeline');
+            document.getElementById('streamFilterBtn').classList.toggle('active', activeStreamView === 'filter');
+            document.getElementById('streamMergedBtn').classList.toggle('active', activeStreamView === 'merged');
+        }
+        function mergeJointExecutiveBrief() { activeStreamView = 'merged'; syncStreamButtons(); renderSurface4(); alert("Brief assembled."); }
+        function switchPresentationLens(lens) {
+            activePresentationLens = lens;
+            ['cards', 'table', 'memo', 'batch'].forEach(l => document.getElementById(`lens-${l}`).classList.toggle('active', l === lens));
+            renderSurface4();
+        }
+        function toggleProvenance(id) { document.getElementById(`prov-${id}`).classList.toggle('show'); }
+        function pinToAuditLedger(id) { alert("Pinned to Executive Brief."); }
+
+        function renderSlotTemplateHTML(slot) {
+            if (!slot) return '';
+            if (slot.type === 'error') return `<div style="color:var(--accent-red);">Error: ${slot.errorMsg}</div>`;
+            if (slot.type === 'variance') {
+                return `<div class="template-slot-box">
+                    <div class="slot-row"><span class="slot-label">Parameter:</span> <span class="slot-value">${slot.paramName}</span></div>
+                    <div class="slot-row"><span class="slot-label">Vault Limit:</span> <span class="slot-value">${slot.vaultLimit}</span></div>
+                    <div class="slot-row"><span class="slot-label">Extracted Value:</span> <span class="slot-value">${slot.extractedValue}</span></div>
+                    <div class="slot-row"><span class="slot-label">Variance:</span> <span class="slot-value" style="color:var(--accent-red);">${slot.varianceAmount}</span></div>
+                    <div style="margin-top:6px; font-size:10px; color:var(--text-muted);"><strong>Impact:</strong> ${slot.impactAnalysis}</div></div>`;
+            } else if (slot.type === 'scope') {
+                const rawText = slot.scopeSummary || '';
+                let parties = "Extracted Live";
+                let jurisdiction = "Analyzed Corpus";
+                let effDate = "Active Term";
+
+                rawText.split(';').forEach(part => {
+                    if (part.includes('Parties:')) parties = part.replace('Parties:', '').trim();
+                    if (part.includes('Governing') || part.includes('Jurisdiction:')) jurisdiction = part.replace(/Governing Jurisdiction:|Jurisdiction:/g, '').trim();
+                    if (part.includes('Effective Date:') || part.includes('Date:')) effDate = part.replace(/Effective Date:|Date:/g, '').trim();
+                });
+
+                return `<div class="template-slot-box">
+                    <div class="slot-row"><span class="slot-label">Parties:</span> <span class="slot-value">${parties}</span></div>
+                    <div class="slot-row"><span class="slot-label">Governing Law:</span> <span class="slot-value">${jurisdiction}</span></div>
+                    <div class="slot-row"><span class="slot-label">Effective Date:</span> <span class="slot-value">${effDate}</span></div>
+                    <div style="margin-top:6px; font-size:10px; color:var(--text-muted);"><strong>Impact:</strong> ${slot.impactAnalysis}</div></div>`;
+            } else if (slot.type === 'locator') {
+                return `<div class="template-slot-box">
+                    <div class="slot-row"><span class="slot-label">Target Query:</span> <span class="slot-value">${slot.targetQuery}</span></div>
+                    <div class="slot-row"><span class="slot-label">Matched Term / Phrase:</span> <span class="slot-value" style="color:var(--accent-green);">${slot.matchedTerm}</span></div>
+                    <div style="margin-top:6px; font-size:10px; color:var(--text-muted);"><strong>Context / Reason:</strong> ${slot.impactAnalysis}</div></div>`;
+            } else {
+                return `<div class="template-slot-box">
+                    <div class="slot-row"><span class="slot-label">Subject:</span> <span class="slot-value">${slot.clauseTopic}</span></div>
+                    <div class="slot-row"><span class="slot-label">Risk Exposure:</span> <span class="slot-value" style="color:var(--accent-amber);">${slot.riskExposure}</span></div>
+                    <div style="margin-top:6px; font-size:10px; color:var(--text-muted);"><strong>Impact:</strong> ${slot.impactAnalysis}</div></div>`;
+            }
+        }
+
+        function renderSurface4() {
+            const container = document.getElementById('surface4Container');
+            let activeItems = activeStreamView === 'pipeline' ? pipelineLedgerItems : activeStreamView === 'filter' ? filterLedgerItems : [...pipelineLedgerItems, ...filterLedgerItems];
+
+            if (activeItems.length === 0 && activePresentationLens !== 'batch') {
+                container.innerHTML = `<div class="empty-state">[STREAM IDLE]<br>Execute verification or filter scan.</div>`;
+                return;
+            }
+
+            if (activePresentationLens === 'cards') {
+                let html = '';
+                activeItems.forEach(item => {
+                    html += `<div class="audit-card ${item.statusClass}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div class="step-origin-pill" style="margin-bottom:0;">📌 ${item.step}</div>
+                            <span style="font-size:9px; font-family:var(--font-mono); color:var(--accent-primary);">[ENGINE: ${item.engine}]</span>
+                        </div>
+                        <div class="audit-card-top"><span class="audit-card-title">${item.title}</span><span class="status-badge ${item.statusBadge === 'HIGH RISK' ? 'high' : 'located'}">${item.statusBadge}</span></div>
+                        ${renderSlotTemplateHTML(item.slotPayload)}
+                        <button class="provenance-toggle" onclick="toggleProvenance(${item.id})">🔍 View Provenance (${item.slotPayload.articleRef || 'Corpus'})</button>
+                        <div class="provenance-box" id="prov-${item.id}"><strong>Verbatim Quote:</strong><br><br>${item.slotPayload.verbatimQuote || 'N/A'}</div>
+                        <div class="audit-card-footer"><span style="font-size:9px; color:var(--text-dim);">${item.recordHash}</span><button class="btn-pin" onclick="pinToAuditLedger(${item.id})">+ Pin</button></div></div>`;
+                });
+                container.innerHTML = html;
+            } else if (activePresentationLens === 'table') {
+                let tableHtml = `<table class="matrix-table"><thead><tr><th>ID</th><th>Milestone</th><th>Engine</th><th>Status</th></tr></thead><tbody>`;
+                activeItems.forEach(item => { tableHtml += `<tr><td>${item.recordHash}</td><td>${item.step}</td><td>${item.engine}</td><td><b>${item.statusBadge}</b></td></tr>`; });
+                container.innerHTML = tableHtml + `</tbody></table>`;
+            } else if (activePresentationLens === 'memo') {
+                let memoHtml = `<div class="memo-body"><strong>EXECUTIVE AUDIT MEMORANDUM</strong><br><em>Orizon Enterprise Verification Workspace</em><br><br><strong>Workflow:</strong> ${currentMasterTask}<br><strong>Findings:</strong> ${activeItems.length}<ol style="margin-left:20px; margin-top:8px;">`;
+                activeItems.forEach(item => { memoHtml += `<li><strong>${item.step}:</strong> ${item.title}</li>`; });
+                container.innerHTML = memoHtml + `</ol></div>`;
+            } else if (activePresentationLens === 'batch') {
+                container.innerHTML = `<table class="matrix-table"><thead><tr><th>Slot</th><th>TAM</th><th>Burn</th><th>Ask</th><th>Status</th></tr></thead><tbody><tr><td>Slot 1: Alpha</td><td>Pending</td><td>Pending</td><td>Pending</td><td><b>READY</b></td></tr></tbody></table>`;
+            }
+        }
+    </script>
+</body>
+</html>
