@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orizon | Enterprise Verification Workspace (Universal Audit Envelope)</title>
-    <!-- =========================================================================
-         BLOCK 1: STYLESHEET & CSS INTERFACE ARCHITECTURE
+   <!-- =========================================================================
+         BLOCK 1: STYLESHEET & CSS INTERFACE ARCHITECTURE (Lines - )
          ========================================================================= -->
     <style>
         :root {
@@ -123,6 +123,11 @@
     </style>
 </head>
 <body>
+
+
+    <!-- =========================================================================
+         BLOCK 2: HTML UI LAYOUT & WORKSPACE STRUCTURE (Lines - )
+         ========================================================================= -->
 
     <header>
         <div class="logo-area">
@@ -320,6 +325,12 @@
         </div>
     </div>
 
+
+    <!-- =========================================================================
+         BLOCK 3: SCRIPT CONFIGURATION & TAXONOMIES (Lines - )
+         ========================================================================= -->
+
+
     <script>
         let currentMasterTask = 'legal_mna';
         let currentStepIndex = 0;
@@ -508,6 +519,13 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             'acct_debt': ["Leverage Ratios", "Liquidity Covenants", "Restricted Payments", "EBITDA Adjustments & Add-Backs"]
         };
 
+
+
+        // ==========================================
+        // BLOCK 4: MASTER INDUSTRY PIPELINE RAILS (Lines  - )
+        // ==========================================
+
+
         const journeySteps = {
             'legal_mna': [
                 { name: "Scope Ingestion & Baseline Verification", desc: "Verifies effective dates, governing law, and corporate parties.", templateType: "scope", targetLens: "1. Focus strictly on administrative scope, effective dates, governing jurisdiction, and entity names. 2. Format your extraction strictly as: Parties: [names]; Governing Jurisdiction: [jurisdiction]; Effective Date: [date]." },
@@ -561,6 +579,11 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
                 { name: "Min Liquidity Reserve Floor ($)", val: "2000000", operator: "FLOOR", active: true }
             ]
         };
+
+
+        // ==========================================
+        // BLOCK 5: UECC CORE & NATIVE JSON API CONFIGURATION (Lines -)
+        // ==========================================
 
         window.onload = function() {
             onMasterTaskChange();
@@ -757,29 +780,37 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             return true;
         }
 
-        async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
-            const xmlPrompt = buildSplitPromptPayload(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
-            
-            const payload = {
-                prompt: xmlPrompt,
-                systemInstruction: `Strict institutional extraction parser.`,
-                customApiKey: geminiApiKey || ""
-            };
+async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
+            const activeApiKey = geminiApiKey || localStorage.getItem('orizon_gemini_api_key');
+            if (!activeApiKey) {
+                throw new Error("Gemini API Key missing. Please set it in 'Admin Chamber' (⚙️).");
+            }
 
-            const response = await fetch('/api/verify', {
+            const xmlPrompt = buildSplitPromptPayload(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeApiKey}`;
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: xmlPrompt }] }],
+                    systemInstruction: { parts: [{ text: "Strict institutional extraction parser. Output valid JSON only." }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        temperature: 0.0,
+                        maxOutputTokens: 250
+                    }
+                })
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`Proxy HTTP ${response.status}: ${errText}`);
+                throw new Error(`Gemini API HTTP ${response.status}: ${errText}`);
             }
 
             const data = await response.json();
-            if (!data.candidates || !data.candidates[0].content) {
-                throw new Error("Invalid response structure from serverless proxy.");
+            if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
+                throw new Error("Invalid response structure from Gemini API.");
             }
 
             const rawText = data.candidates[0].content.parts[0].text;
@@ -833,6 +864,11 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             }
             return { title, statusBadge, statusClass, slotPayload };
         }
+
+
+        // ==========================================
+        // BLOCK 6: EXECUTION ENGINES & RENDERING (Lines -)
+        // ==========================================
 
         async function executePipelineStep() {
             const telemetry = document.getElementById('journeyTelemetryBar');
