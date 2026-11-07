@@ -813,8 +813,28 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
                 throw new Error("Invalid response structure from Gemini API.");
             }
 
-            const rawText = data.candidates[0].content.parts[0].text;
-            const parsed = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+const rawText = data.candidates[0].content.parts[0].text;
+            
+            // Clean markdown and trailing artifacts
+            let cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+            
+            // Fallback: locate the first '{' and last '}' to extract pure JSON block
+            const firstBrace = cleanedText.indexOf('{');
+            const lastBrace = cleanedText.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+            }
+
+            let parsed;
+            try {
+                parsed = JSON.parse(cleanedText);
+            } catch (jsonErr) {
+                // If standard parse fails due to quotes, clean control characters & unescaped quotes
+                const sanitized = cleanedText
+                    .replace(/[\u0000-\u001F]+/g, " ")
+                    .replace(/\\(?!["\\/bfnrt])/g, "\\\\");
+                parsed = JSON.parse(sanitized);
+            }
             
             validateTier1Schema(parsed);
             return parsed;
