@@ -826,8 +826,7 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
             
             validateTier1Schema(parsed);
             return parsed;
-        }
-        }
+        }        
 
         function applyTier2DeterministicMatrix(rawExtractionResult, task, stepIdx) {
             const stepConfig = journeySteps[task][stepIdx];
