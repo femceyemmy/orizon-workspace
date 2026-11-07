@@ -794,11 +794,13 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: xmlPrompt }] }],
-                    systemInstruction: { parts: [{ text: "Strict institutional extraction parser. Output valid JSON only." }] },
+                    systemInstruction: { 
+                        parts: [{ text: "You are a strict institutional data extraction engine. You must output ONLY a valid JSON object matching the requested schema. No conversational filler, no markdown formatting outside the JSON." }] 
+                    },
                     generationConfig: {
                         responseMimeType: "application/json",
                         temperature: 0.0,
-                        maxOutputTokens: 250
+                        maxOutputTokens: 500
                     }
                 })
             });
@@ -813,31 +815,18 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
                 throw new Error("Invalid response structure from Gemini API.");
             }
 
-const rawText = data.candidates[0].content.parts[0].text;
+            const rawText = data.candidates[0].content.parts[0].text;
             
-            // Clean markdown and trailing artifacts
-            let cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+            // Clean markdown wrappers if any slip through
+            const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
             
-            // Fallback: locate the first '{' and last '}' to extract pure JSON block
-            const firstBrace = cleanedText.indexOf('{');
-            const lastBrace = cleanedText.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1) {
-                cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
-            }
-
-            let parsed;
-            try {
-                parsed = JSON.parse(cleanedText);
-            } catch (jsonErr) {
-                // If standard parse fails due to quotes, clean control characters & unescaped quotes
-                const sanitized = cleanedText
-                    .replace(/[\u0000-\u001F]+/g, " ")
-                    .replace(/\\(?!["\\/bfnrt])/g, "\\\\");
-                parsed = JSON.parse(sanitized);
-            }
+            // Strict JSON parse: if it's not pristine JSON, throw an explicit extraction error 
+            // rather than allowing dirty noise into the audit ledger.
+            const parsed = JSON.parse(cleanedText);
             
             validateTier1Schema(parsed);
             return parsed;
+        }
         }
 
         function applyTier2DeterministicMatrix(rawExtractionResult, task, stepIdx) {
