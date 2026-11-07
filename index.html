@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orizon | Enterprise Verification Workspace (Universal Audit Envelope)</title>
-   <!-- =========================================================================
-         BLOCK 1: STYLESHEET & CSS INTERFACE ARCHITECTURE (Lines - )
+    <!-- =========================================================================
+         BLOCK 1: STYLESHEET & CSS INTERFACE ARCHITECTURE
          ========================================================================= -->
     <style>
         :root {
@@ -116,19 +116,13 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-card { background: var(--surface-panel); border: 1px solid var(--border-active); width: 440px; border-radius: 8px; padding: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
         .modal-title { font-size: 14px; font-weight: 700; font-family: var(--font-mono); margin-bottom: 14px; color: var(--accent-primary); }
-        .vault-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
-        .vbtab { flex: 1; text-align: center; background: var(--surface-card); border: 1px solid var(--border-color); padding: 4px; font-size: 10px; font-family: var(--font-mono); cursor: pointer; border-radius: 4px; color: var(--text-muted); }
-        .vbtab.active { background: var(--surface-hover); color: var(--accent-primary); border-color: var(--accent-primary); font-weight: bold; }
-        .slot-indicator { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 6px; }
     </style>
 </head>
 <body>
 
-
     <!-- =========================================================================
-         BLOCK 2: HTML UI LAYOUT & WORKSPACE STRUCTURE (Lines - )
+         BLOCK 2: HTML UI LAYOUT & WORKSPACE STRUCTURE
          ========================================================================= -->
-
     <header>
         <div class="logo-area">
             <span class="logo-badge">ORIZON v24</span>
@@ -146,7 +140,7 @@
     </header>
 
     <div class="workspace-grid">
-        <!-- LEFT COLUMN -->
+        <!-- LEFT COLUMN MODULES -->
         <div class="left-column">
             <div class="module-section active" id="sec-lens">
                 <div class="module-header" onclick="toggleModule('sec-lens')">
@@ -325,12 +319,9 @@
         </div>
     </div>
 
-
     <!-- =========================================================================
-         BLOCK 3: SCRIPT CONFIGURATION & TAXONOMIES (Lines - )
+         BLOCK 3, 4, 5 & 6: SCRIPT CONFIGURATION, TAXONOMIES, PIPELINE & RENDER
          ========================================================================= -->
-
-
     <script>
         let currentMasterTask = 'legal_mna';
         let currentStepIndex = 0;
@@ -342,152 +333,6 @@
         let scannerMode = 'locator';
         let executionEngineMode = 'local';
         let geminiApiKey = localStorage.getItem('orizon_gemini_api_key') || '';
-
-        const coreTestDossiers = {
-            'legal_mna': `================================================================================
-DEFINITIVE MERGER & ACQUISITION TRANSACTION AGREEMENT (M&A DOSSIER)
-================================================================================
-ARTICLE 1: SCOPE, PARTIES & GOVERNING LAW
-1.1 Parties. Agreement between Helios Systems Inc. ("Acquirer") and Apex Software Ltd ("Target").
-1.2 Effective Date. Executed as of October 24, 2026 under Delaware State Jurisdiction.
-
-ARTICLE 2: INDEMNIFICATION CATEGORIZATION & MUTUALITY
-2.1 One-Sided Indemnity Shift. Target shall indemnify Acquirer for all pre-closing operational liabilities, whereas Acquirer holds zero reverse indemnity obligations for post-closing operational shifts.
-
-ARTICLE 3: FINANCIAL EXPOSURE & CHANGE-OF-CONTROL CEILINGS
-3.1 Aggregate Liability Cap. Target aggregate liability for unhedged indemnities is strictly capped at Three Hundred Thousand Dollars ($300,000 USD).
-3.2 Escrow Clawback. Earnouts are subject to unilateral clawback if seller EBITDA targets miss projections by 2%.
-
-ARTICLE 4: INTELLECTUAL PROPERTY ASSIGNMENT & DERIVATIVE RIGHTS
-4.1 IP Assignment. Software core code is fully transferred; however, target founders retain an uncompensated derivative commercial exploitation license for unrelated markets.
-
-ARTICLE 5: DISPUTE SCHEDULE & LITIGATION CROSS-EXAMINATION
-5.1 Pending Arbitrations. Active customer lawsuit schedule totals $85,000 USD in potential pending arbitration liabilities across 3 claims.
-
-ARTICLE 6: FINAL COMPLIANCE SEALING & EXECUTION
-6.1 Closing Conditions. Final execution contingent upon closing escrow deposit and full ledger stamping.`,
-
-            'vc_terms': `================================================================================
-SERIES A PREFERRED STOCK INVESTMENT TERM SHEET (VC DOSSIER)
-================================================================================
-SECTION 1: SCOPE & VALUATION INGESTION
-1.1 Issuer & Lead Investor. Quantum AI Inc. ("Company") and Vanguard Horizon Ventures ("Lead Investor").
-1.2 Valuation Ask. Pre-Money Valuation set at $15,000,000 USD for a $3,000,000 USD Series A Round.
-1.3 Valuation Cap Floor. Floor set at Eight Hundred Thousand Dollars ($800,000 USD).
-
-SECTION 2: CAP TABLE & DILUTION INGESTION
-2.1 Equity Dilution. Post-money option pool expansion set at 18.5% unallocated equity reserved for key hires.
-
-SECTION 3: LIQUIDATION PREFERENCE MULTIPLE
-3.1 Multiple & Participation. Series A Preferred Stock carries a 2.0x Participating Liquidation Preference Multiple ahead of Common Stock founders.
-
-SECTION 4: ANTI-DILUTION & PROTECTIVE PROVISIONS
-4.1 Anti-Dilution Adjustment. In the event of a down-round, investor rights trigger a Pay-to-Play Full Ratchet Anti-Dilution Squeeze.
-
-SECTION 5: GOVERNANCE & BOARD CONTROL
-5.1 Board Composition. Lead investor receives 2 out of 5 board seats with absolute veto power over future debt issuances exceeding $100k.
-
-SECTION 6: INVESTMENT COMMITTEE STAMPING
-6.1 Binding Exclusivity. 45-day exclusivity window required for legal definitive drafting.`,
-
-            'acct_debt': `================================================================================
-CREDIT AGREEMENT & DEBT COVENANT COMPLIANCE DOSSIER (ACCOUNTING DOSSIER)
-================================================================================
-SECTION 1: CREDIT FACILITY SCOPE & INGESTION
-1.1 Facility Terms. Term Loan Facility of $12,500,000 USD issued to Apex Manufacturing Corp by First National Bank, maturing Oct 2029.
-
-SECTION 2: CONSOLIDATED EBITDA & ADD-BACK AUDIT
-2.1 EBITDA Adjustments. Reported EBITDA of $2,800,000 includes $500,000 in unverified projected operational cost savings and synergies add-backs.
-
-SECTION 3: LEVERAGE RATIO COVENANT CEILING
-3.1 Leverage Ratio Requirement. Total Debt to Consolidated EBITDA Leverage Ratio reported at 4.20x as of current quarter end.
-
-SECTION 4: MINIMUM LIQUIDITY FLOOR VERIFICATION
-4.1 Liquid Reserve Floor. Borrower currently holds One Million Five Hundred Thousand Dollars ($1,500,000 USD) in unencumbered liquid cash equivalents.
-
-SECTION 5: RESTRICTED PAYMENTS & DIVIDEND LEAKAGE
-5.1 Dividend Restrictions. Borrower distributed $250,000 in executive equity buybacks during the current fiscal quarter prior to compliance verification.
-
-SECTION 6: AUDIT COMPLIANCE STAMPING
-6.1 Compliance Certificate. Officer certificate delivered subject to bank covenant review.`
-        };
-
-        const batchVaultInputs = [
-            `================================================================================
-STARTUP PITCH DECK INGESTION SLIDE: TECHNOVA SOLUTIONS (SLOT 1)
-================================================================================
-EXECUTIVE SUMMARY & PITCH OVERVIEW:
-Technova Solutions is building the next-generation autonomous infrastructure layer for enterprise supply chains. 
-
-MARKET OPPORTUNITY (TAM):
-According to bottom-up market analysis, our total addressable market (TAM) across North America and Europe is conservatively estimated at $400,000,000 USD annually.
-
-FINANCIAL TRACTION & BURN RATE:
-We are currently generating $28,500 in Monthly Recurring Revenue (MRR) with a net monthly cash burn rate of $135,000 USD as we aggressively expand our core engineering team.
-
-INVESTMENT ASK & INSTRUMENT:
-We are raising our seed tranche on a $9,000,000 USD Valuation Cap post-money SAFE.`,
-
-            `================================================================================
-STARTUP PITCH DECK INGESTION SLIDE: VELOPAY FINTECH (SLOT 2)
-================================================================================
-EXECUTIVE SUMMARY & PITCH OVERVIEW:
-VeloPay Fintech provides instant cross-border settlement infrastructure for high-volume B2B merchants across emerging markets.
-
-MARKET OPPORTUNITY (TAM):
-Operating at the intersection of trade finance and instant rails, our current Total Addressable Market (TAM) is validated at $1,200,000,000 USD.
-
-FINANCIAL TRACTION & BURN RATE:
-The platform currently processes active transaction volume yielding $65,000 in MRR. Net monthly burn rate is managed at $190,000 USD.
-
-INVESTMENT ASK & INSTRUMENT:
-Seeking lead investor for Series Seed structured at an $18,000,000 USD Valuation Cap.`,
-
-            `================================================================================
-STARTUP PITCH DECK INGESTION SLIDE: AGRICHAIN GLOBAL (SLOT 3)
-================================================================================
-EXECUTIVE SUMMARY & PITCH OVERVIEW:
-AgriChain Global digitizes agricultural commodity traceability and inventory financing for mid-market farmers.
-
-MARKET OPPORTUNITY (TAM):
-Our total addressable market spans global grain and produce trade, representing a $850,000,000 USD TAM.
-
-FINANCIAL TRACTION & BURN RATE:
-Early pilot deployments yield $12,000 MRR with a disciplined net monthly burn rate of $45,000 USD.
-
-INVESTMENT ASK & INSTRUMENT:
-Targeting a $5,000,000 USD Valuation Cap SAFE to scale regional field operations.`,
-
-            `================================================================================
-STARTUP PITCH DECK INGESTION SLIDE: MEDPULSE AI (SLOT 4)
-================================================================================
-EXECUTIVE SUMMARY & PITCH OVERVIEW:
-MedPulse AI offers real-time patient monitoring diagnostics integrated into hospital ICU telemetry networks.
-
-MARKET OPPORTUNITY (TAM):
-Focusing initially on tier-1 clinical centers, our immediate TAM is calculated at $300,000,000 USD.
-
-FINANCIAL TRACTION & BURN RATE:
-Subscription software revenues are currently $40,000 MRR with a steady net monthly burn rate of $95,000 USD.
-
-INVESTMENT ASK & INSTRUMENT:
-Opening seed round with a $10,000,000 USD Valuation Cap.`,
-
-            `================================================================================
-STARTUP PITCH DECK INGESTION SLIDE: BIOSYNTH LABS (SLOT 5)
-================================================================================
-EXECUTIVE SUMMARY & PITCH OVERVIEW:
-BioSynth Labs accelerates synthetic enzyme discovery using proprietary computational biology workflows.
-
-MARKET OPPORTUNITY (TAM):
-Targeting global specialty chemical manufacturing, our overall market potential (TAM) stands at $2,100,000,000 USD.
-
-FINANCIAL TRACTION & BURN RATE:
-Commercial pilot agreements generate $95,000 in MRR against a net monthly burn rate of $240,000 USD.
-
-INVESTMENT ASK & INSTRUMENT:
-Raising Series A funding at a $25,000,000 USD Valuation Cap.`
-        ];
 
         const vulnerabilityCategories = {
             'asymmetry': [
@@ -519,12 +364,7 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             'acct_debt': ["Leverage Ratios", "Liquidity Covenants", "Restricted Payments", "EBITDA Adjustments & Add-Backs"]
         };
 
-
-
-        // ==========================================
-        // BLOCK 4: MASTER INDUSTRY PIPELINE RAILS (Lines  - )
-        // ==========================================
-
+        const batchVaultInputs = ["", "", "", "", ""];
 
         const journeySteps = {
             'legal_mna': [
@@ -567,27 +407,23 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
                 { name: "Dispute Schedule Cap ($)", val: "15000", operator: "CEILING", active: true }
             ],
             'vc_terms': [
-                { name: "Valuation Cap Floor ($)", val: "1000000", operator: "FLOOR", active: true },
-                { name: "Max Option Pool Dilution (%)", val: "15.0", operator: "RATIO", active: true }
+                { name: "Valuation Cap Floor ($)", val: "", operator: "FLOOR", active: true },
+                { name: "Max Option Pool Dilution (%)", val: "", operator: "RATIO", active: true }
             ],
             'vc_pitch': [
-                { name: "Min TAM Threshold ($)", val: "1000000000", operator: "FLOOR", active: true },
-                { name: "Max Monthly Burn Rate ($)", val: "100000", operator: "CEILING", active: true }
+                { name: "Min TAM Threshold ($)", val: "", operator: "FLOOR", active: true },
+                { name: "Max Monthly Burn Rate ($)", val: "", operator: "CEILING", active: true }
             ],
             'acct_debt': [
-                { name: "Max Leverage Ratio Ceiling", val: "3.50", operator: "CEILING", active: true },
-                { name: "Min Liquidity Reserve Floor ($)", val: "2000000", operator: "FLOOR", active: true }
+                { name: "Max Leverage Ratio Ceiling", val: "", operator: "CEILING", active: true },
+                { name: "Min Liquidity Reserve Floor ($)", val: "", operator: "FLOOR", active: true }
             ]
         };
-
-
-        // ==========================================
-        // BLOCK 5: UECC CORE & NATIVE JSON API CONFIGURATION (Lines -)
-        // ==========================================
 
         window.onload = function() {
             onMasterTaskChange();
             onCategoryChange();
+            document.getElementById('vaultTextArea').value = ""; 
             syncModuleVisibility();
             setEngineMode('local');
         };
@@ -639,19 +475,6 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             currentStepIndex = 0;
             pipelineLedgerItems = [];
             filterLedgerItems = [];
-            
-            if (currentMasterTask === 'vc_pitch') {
-                document.getElementById('vaultModeLabel').textContent = "BATCH MULTI-DOSSIER MODE";
-                document.getElementById('vaultTabs').style.display = 'flex';
-                document.getElementById('slotIndicator').style.display = 'block';
-                switchBatchSlot(0); 
-            } else {
-                document.getElementById('vaultModeLabel').textContent = "SINGLE DOSSIER MODE";
-                document.getElementById('vaultTabs').style.display = 'none';
-                document.getElementById('slotIndicator').style.display = 'none';
-                document.getElementById('vaultTextArea').value = coreTestDossiers[currentMasterTask] || "";
-            }
-
             const container = document.getElementById('journeyStepsContainer');
             const steps = journeySteps[currentMasterTask];
             let html = '';
@@ -780,34 +603,31 @@ Raising Series A funding at a $25,000,000 USD Valuation Cap.`
             return true;
         }
 
-async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
+        // RESTORED STABLE API CONFIGURATION FROM WORKING LEGACY CODE
+        async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks) {
             const activeApiKey = geminiApiKey || localStorage.getItem('orizon_gemini_api_key');
-            if (!activeApiKey) {
-                throw new Error("Gemini API Key missing. Please set it in 'Admin Chamber' (⚙️).");
-            }
-
+            if (!activeApiKey) throw new Error("API Error: No Gemini API Key configured.");
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeApiKey}`;
             const xmlPrompt = buildSplitPromptPayload(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeApiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: xmlPrompt }] }],
+                generationConfig: { 
+                    temperature: 0.0,
+                    responseMimeType: "application/json"
+                }
+            };
 
-            const response = await fetch(endpoint, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: xmlPrompt }] }],
-                    systemInstruction: { 
-                        parts: [{ text: "You are a strict institutional data extraction engine. Output ONLY raw valid JSON matching the exact requested schema. No markdown formatting blocks." }] 
-                    },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        temperature: 0.0,
-                        maxOutputTokens: 600
-                    }
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`Gemini API HTTP ${response.status}: ${errText}`);
+                throw new Error(`API HTTP ${response.status}: ${errText}`);
             }
 
             const data = await response.json();
@@ -815,29 +635,8 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
                 throw new Error("Invalid response structure from Gemini API.");
             }
 
-            let rawText = data.candidates[0].content.parts[0].text;
-            
-            // Strip markdown code blocks if present
-            rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-            // Isolate JSON object boundaries
-            const firstBrace = rawText.indexOf('{');
-            const lastBrace = rawText.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1) {
-                rawText = rawText.substring(firstBrace, lastBrace + 1);
-            }
-
-            let parsed;
-            try {
-                parsed = JSON.parse(rawText);
-            } catch (err) {
-                // Safe JSON repair for common LLM single-quote or trailing comma artifacts
-                const repaired = rawText
-                    .replace(/[']/g, '"')
-                    .replace(/,\s*}/g, '}')
-                    .replace(/,\s*]/g, ']');
-                parsed = JSON.parse(repaired);
-            }
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
             
             validateTier1Schema(parsed);
             return parsed;
@@ -888,18 +687,13 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
             return { title, statusBadge, statusClass, slotPayload };
         }
 
-
-        // ==========================================
-        // BLOCK 6: EXECUTION ENGINES & RENDERING (Lines -)
-        // ==========================================
-
         async function executePipelineStep() {
             const telemetry = document.getElementById('journeyTelemetryBar');
             const dossierText = document.getElementById('vaultTextArea').value;
             if (!dossierText.trim()) { alert("Paste dossier text first."); return; }
 
             const stepConfig = journeySteps[currentMasterTask][currentStepIndex];
-            telemetry.textContent = `⚡ [ORIZON CORE]: Executing pipeline milestone via Vercel proxy...`;
+            telemetry.textContent = `⚡ [ORIZON CORE]: Executing pipeline milestone with native JSON API...`;
 
             try {
                 const industrialPersona = currentMasterTask === 'acct_debt' ? "Senior Debt Compliance & Accounting Auditor" : currentMasterTask.includes('vc') ? "Senior Venture Capital Analyst" : "Senior M&A Legal Counsel";
@@ -913,8 +707,8 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
                 } : await callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy, granularTargetLens, textChunks);
 
                 const result = applyTier2DeterministicMatrix(rawExtractionResult, currentMasterTask, currentStepIndex);
-                pushPipelineRecord(result.title, result.slotPayload, result.statusBadge, result.statusClass, stepConfig.name, executionEngineMode === 'local' ? "LOCAL" : "LIVE GEMINI (VERCEL PROXY)");
-                telemetry.textContent = `✅ [VERIFIED VIA VERCEL SERVERLESS PROXY]`;
+                pushPipelineRecord(result.title, result.slotPayload, result.statusBadge, result.statusClass, stepConfig.name, executionEngineMode === 'local' ? "LOCAL" : "LIVE GEMINI (NATIVE JSON)");
+                telemetry.textContent = `✅ [VERIFIED VIA ORIZON NATIVE JSON API]`;
             } catch (err) {
                 telemetry.textContent = `❌ [ORIZON ERROR]: ${err.message}`;
                 pushPipelineRecord(`ERROR: Orizon Failure`, { type: 'error', errorMsg: err.message }, `API ERROR`, `breach`, stepConfig.name, `FAILED`);
@@ -931,7 +725,7 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
             const dossierText = document.getElementById('vaultTextArea').value;
             if (!dossierText.trim()) { alert("Paste dossier text first."); return; }
 
-            telemetry.textContent = `⚡ [DIAGNOSTIC STREAM]: Running serverless semantic locator scan...`;
+            telemetry.textContent = `⚡ [DIAGNOSTIC STREAM]: Running native JSON AI semantic locator scan...`;
             let granularTargetLens = "", industrialPersona = "", domainTaxonomy = [], scanTitle = "", searchedQuery = "";
 
             if (scannerMode === 'locator') {
@@ -986,7 +780,7 @@ async function callTier1GeminiAPIWithSecurity(industrialPersona, domainTaxonomy,
 
                 filterLedgerItems.push({
                     id: Date.now(), recordHash: "AUD-" + Math.floor(100000 + Math.random() * 900000), stream: 'filter',
-                    title: scanTitle, slotPayload, statusBadge: 'LOCATED', statusClass: 'passed', step: scannerMode === 'locator' ? 'Keyword Locator (Semantic)' : 'Vulnerability Filter (Dynamic)', engine: executionEngineMode === 'local' ? 'LOCAL' : 'LIVE GEMINI (VERCEL PROXY)'
+                    title: scanTitle, slotPayload, statusBadge: 'LOCATED', statusClass: 'passed', step: scannerMode === 'locator' ? 'Keyword Locator (Semantic)' : 'Vulnerability Filter (Dynamic)', engine: executionEngineMode === 'local' ? 'LOCAL' : 'LIVE GEMINI (NATIVE JSON)'
                 });
                 activeStreamView = 'filter'; syncStreamButtons(); renderSurface4();
                 telemetry.textContent = `✅ [SEMANTIC LOCATOR SCAN COMPLETE]`;
